@@ -21,27 +21,6 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-      
-      - name: Docker Authentication
-        # You may pin to the exact commit or the version.
-        # uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b
-        uses: docker/login-action@v2.0.0
-        with:
-          username: ${{secrets.DOCKERHUB_USER}}
-          password: ${{secrets.DOCKERHUB_PWD}}
-          
-      - name: Build and push Docker images to DockerHub
-        # You may pin to the exact commit or the version.
-        # uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8
-        uses: docker/build-push-action@v3.0.0
-        with:
-          file: ./src/Dockerfile
-          context: ./src
-          push: true
-          tags: |
-            rodrigoclemente/kube-news:latest
-            rodrigoclemente/kube-news:${{github.run_number}}
             
       - uses: trstringer/manual-approval@v1
         with:
@@ -53,20 +32,3 @@ jobs:
           exclude-workflow-initiator-as-approver: true
           additional-approved-words: 'teste approved-words'
           additional-denied-words: 'teste denied-words'
-  CD:
-    runs-on: ubuntu-latest
-    needs: [CI]
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Kubernetes Set Context with Kubeconfig
-        uses: Azure/k8s-set-context@v2
-        with:
-          method: kubeconfig
-          kubeconfig: ${{secrets.K8S_CONFIG}}
-      - name: Deploy to Dvelopment Kubernetes cluster
-        uses: Azure/k8s-deploy@v3.1
-        with:
-          images: rodrigoclemente/kube-news:${{github.run_number}}
-          manifests: |
-            k8s/deployment.yaml
